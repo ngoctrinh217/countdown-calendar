@@ -194,7 +194,7 @@ textarea:focus,.field input:focus{border-color:var(--ink)}
   .hms b{font-size:23px}
   .dow div{padding-left:3px;text-align:center;font-size:10px}
   .cell{min-height:62px;padding:5px 4px;align-items:center}
-  .cell .rem,.np,.more{display:none}
+  .cell .rem,.cell .np,.cell .more{display:none}
   .cell .dots{display:flex;justify-content:center}
   .cell .n{font-size:12px}
   .cell.target::after{display:none}
@@ -248,6 +248,51 @@ button{-webkit-tap-highlight-color:transparent}
   .colors button{width:26px;height:26px}
 }
 @keyframes sheet{from{transform:translateY(60px);opacity:.4}to{transform:none;opacity:1}}
+
+/* ---------- time / timetable ---------- */
+.timerow{display:flex;gap:8px;align-items:flex-end;margin:10px 0 0}
+.timerow label{flex:1;min-width:0}
+.timerow .label{display:block;margin-bottom:4px}
+.timerow input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;outline:none}
+.timerow input:focus{border-color:var(--ink)}
+.btn.sm{padding:9px 12px;font-size:12.5px}
+.tm{font-family:var(--mono);font-size:11px;color:var(--ink2);margin-right:7px}
+.tt{--gw:54px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
+.tt-row{display:grid;grid-template-columns:var(--gw) repeat(var(--n),minmax(0,1fr))}
+.tt-head{background:var(--paper);border-bottom:1px solid var(--line)}
+.tt-head button{padding:10px 10px 8px;text-align:left;border-left:1px solid var(--line)}
+.tt-head button:hover{background:var(--paper2)}
+.tt-head .label{display:block}
+.tt-head b{font-family:var(--serif);font-weight:400;font-size:28px;letter-spacing:-.03em;line-height:1.1}
+.tt-head small{font-family:var(--mono);font-size:10.5px;color:var(--mute);margin-left:6px}
+.tt-head .today b{color:var(--accent)}
+.tt-head .tgt .label{color:var(--accent)}
+.tt-all{border-bottom:1px solid var(--line)}
+.tt-all > div{border-left:1px solid var(--line);padding:5px;display:flex;flex-direction:column;gap:4px;min-height:32px;cursor:pointer}
+.gut{font-family:var(--mono);font-size:10px;color:var(--mute);text-align:right;padding:7px 8px 0 0;border-left:0!important;cursor:default!important}
+.tt-gutcol{position:relative;height:calc(var(--hrs)*var(--hh))}
+.tt-gutcol span{position:absolute;right:8px;transform:translateY(-50%);font-family:var(--mono);font-size:10px;color:var(--mute)}
+.tt-col{position:relative;border-left:1px solid var(--line);height:calc(var(--hrs)*var(--hh));cursor:cell;
+  background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(var(--hh) - 1px),var(--line) calc(var(--hh) - 1px),var(--line) var(--hh))}
+.tt-col.today{background-color:color-mix(in srgb,var(--accent) 5%,transparent)}
+.blk{position:absolute;border-radius:6px;border-left:3px solid var(--c);background:color-mix(in srgb,var(--c) 17%,var(--surface));padding:3px 6px;font-size:12px;line-height:1.3;overflow:hidden;cursor:pointer;color:var(--ink);box-shadow:0 0 0 1px var(--surface)}
+.blk:hover{background:color-mix(in srgb,var(--c) 28%,var(--surface))}
+.blk.done{opacity:.45;text-decoration:line-through}
+.blk .tm{display:block;font-size:10px;margin:0 0 1px}
+.nowline{position:absolute;left:0;right:0;height:0;border-top:2px solid var(--accent);z-index:3;pointer-events:none}
+.nowline::before{content:"";position:absolute;left:-4px;top:-5px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.arow li .tm{margin-right:8px}
+@media(max-width:700px){
+  .tt{--gw:40px}
+  .tt-head button{padding:8px 8px 6px}
+  .tt-head b{font-size:22px}
+  .gut,.tt-gutcol span{font-size:9.5px}
+  .gut{padding-right:5px}
+  .tt-gutcol span{right:5px}
+  .blk{font-size:12.5px}
+  .timerow .btn{padding:10px}
+  .timerow input{font-size:16px;padding:9px 10px}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -304,6 +349,7 @@ button{-webkit-tap-highlight-color:transparent}
       <div class="tabs" id="seg">
         <button data-v="month" class="on">Tháng</button>
         <button data-v="week">Tuần</button>
+        <button data-v="day">Ngày</button>
         <button data-v="year">Năm</button>
         <button data-v="agenda">Kế hoạch</button>
       </div>
@@ -317,6 +363,7 @@ button{-webkit-tap-highlight-color:transparent}
 <nav class="dock" id="dock" aria-label="Chế độ xem">
   <button data-v="month" class="on"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Tháng</button>
   <button data-v="week"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M9.2 5v15M14.8 5v15"/></svg>Tuần</button>
+  <button data-v="day"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h4"/></svg>Ngày</button>
   <button data-v="year"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></svg>Năm</button>
   <button data-v="agenda"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg>Kế hoạch</button>
 </nav>
@@ -326,6 +373,11 @@ button{-webkit-tap-highlight-color:transparent}
   <h3 id="nTitle"></h3><div class="sub" id="nSub"></div>
   <div class="note-list" id="nList"></div>
   <textarea id="nText" placeholder="Ghi chú / kế hoạch cho ngày này… (Ctrl+Enter để lưu)"></textarea>
+  <div class="timerow">
+    <label><span class="label">Từ giờ</span><input type="time" id="nStart"></label>
+    <label><span class="label">Đến giờ</span><input type="time" id="nEnd"></label>
+    <button class="btn sm" id="nClear" type="button">Cả ngày</button>
+  </div>
   <div class="colors" id="nColors"></div>
   <div class="row"><button class="btn" data-close>Đóng</button><button class="btn pri" id="nAdd">Thêm ghi chú</button></div>
 </div></div>
@@ -422,6 +474,10 @@ function tick(){
 setInterval(tick,1000);
 
 const notesOf=k=>state.notes[k]||[];
+const toMin=t=>{const[h,m]=t.split(':').map(Number);return h*60+m};
+const byTime=(a,b)=>(a.s?toMin(a.s):-1)-(b.s?toMin(b.s):-1);
+const endMin=x=>{const s=toMin(x.s);return x.e&&toMin(x.e)>s?toMin(x.e):s+60};
+const tl=x=>x.s?(x.e?`${x.s}–${x.e}`:x.s):'';
 const remLabel=d=>{const n=dayDiff(new Date(),d);return n===0?'hôm nay':n>0?`+${n}`:`${n}`};
 const tgtKey=()=>state.target.date;
 
@@ -429,7 +485,7 @@ const view=$('#view');
 function render(){
   $$('#seg button,#dock button').forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
   LS.set('cc_view',state.view);
-  ({month:rMonth,week:rWeek,year:rYear,agenda:rAgenda})[state.view]();
+  ({month:rMonth,week:rWeek,day:rDay,year:rYear,agenda:rAgenda})[state.view]();
   tick();
 }
 function rMonth(){
@@ -442,20 +498,67 @@ function rMonth(){
     const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),k=key(d),ns=notesOf(k);
     const cls=['cell'];if(d.getMonth()!==m)cls.push('out');if(k===key(new Date()))cls.push('today');if(k===tgtKey())cls.push('target');if(i%7>4)cls.push('we');
     h+=`<button class="${cls.join(' ')}" data-k="${k}"><div class="n"><span>${d.getDate()}</span><span class="rem">${remLabel(d)}</span></div>`;
-    h+=ns.slice(0,2).map(x=>`<div class="np ${x.done?'done':''}" style="--c:${x.c}">${esc(x.t)}</div>`).join('');
+    h+=ns.slice(0,2).map(x=>`<div class="np ${x.done?'done':''}" style="--c:${x.c}">${x.s?x.s+' ':''}${esc(x.t)}</div>`).join('');
     if(ns.length>2)h+=`<div class="more">+${ns.length-2} nữa</div>`;
     h+=`<div class="dots">${ns.slice(0,4).map(x=>`<span class="dot" style="--c:${x.c}"></span>`).join('')}</div></button>`;
   }
   view.innerHTML=h+'</div>';
 }
+function lanes(arr){
+  const out=[];let cl=[],cEnd=0,le=[];
+  const flush=()=>{cl.forEach(o=>o.n=le.length);out.push(...cl);cl=[];le=[]};
+  arr.forEach(x=>{
+    const s=toMin(x.s),e=endMin(x);
+    if(cl.length&&s>=cEnd)flush();
+    let l=le.findIndex(v=>v<=s);if(l<0){l=le.length;le.push(e)}else le[l]=e;
+    cEnd=cl.length?Math.max(cEnd,e):e;
+    cl.push({x,s,e,l});
+  });flush();return out;
+}
+function ttHTML(days){
+  const n=days.length,nk=key(new Date());
+  let lo=7,hi=22;
+  days.forEach(d=>notesOf(key(d)).forEach(x=>{if(x.s){lo=Math.min(lo,Math.floor(toMin(x.s)/60));hi=Math.max(hi,Math.ceil(Math.min(endMin(x),1440)/60))}}));
+  const hrs=hi-lo,hh=n===1?58:48;
+  let h=`<div class="tt" data-lo="${lo}" data-hh="${hh}" style="--n:${n};--hh:${hh}px;--hrs:${hrs}">`;
+  h+='<div class="tt-row tt-head"><div></div>'+days.map(d=>{const k=key(d);
+    return `<button data-k="${k}" class="${k===nk?'today':''} ${k===tgtKey()?'tgt':''}"><span class="label">${n===1?DOWL[d.getDay()]:DOW[mondayIdx(d)]}${k===tgtKey()?' · mục tiêu':''}</span><b>${d.getDate()}</b><small>${remLabel(d)}</small></button>`}).join('')+'</div>';
+  h+='<div class="tt-row tt-all"><div class="gut">cả ngày</div>'+days.map(d=>{const k=key(d);
+    return `<div data-k="${k}">${notesOf(k).filter(x=>!x.s).map(x=>`<div class="np ${x.done?'done':''}" style="--c:${x.c}">${esc(x.t)}</div>`).join('')}</div>`}).join('')+'</div>';
+  h+='<div class="tt-row"><div class="tt-gutcol">'+Array.from({length:hrs},(_,i)=>i?`<span style="top:${i*hh}px">${pad(lo+i)}:00</span>`:'').join('')+'</div>';
+  const now=new Date(),nowM=now.getHours()*60+now.getMinutes();
+  days.forEach(d=>{
+    const k=key(d),timed=notesOf(k).filter(x=>x.s).sort(byTime);
+    h+=`<div class="tt-col ${k===nk?'today':''}" data-k="${k}">`;
+    lanes(timed).forEach(o=>{
+      const top=(o.s-lo*60)/60*hh,ht=Math.max(20,(Math.min(o.e,hi*60)-o.s)/60*hh-2);
+      h+=`<div class="blk ${o.x.done?'done':''}" data-k="${k}" style="--c:${o.x.c};top:${top}px;height:${ht}px;left:calc(${o.l/o.n*100}% + 1px);width:calc(${100/o.n}% - 3px)"><span class="tm">${tl(o.x)}</span>${esc(o.x.t)}</div>`;
+    });
+    if(k===nk&&nowM>=lo*60&&nowM<hi*60)h+=`<div class="nowline" style="top:${(nowM-lo*60)/60*hh}px"></div>`;
+    h+='</div>';
+  });
+  return h+'</div></div>';
+}
+const isMobile=()=>matchMedia('(max-width:700px)').matches;
 function rWeek(){
+  if(isMobile())return rWeekStack();
+  const c=state.cur,s=new Date(c.getFullYear(),c.getMonth(),c.getDate()-mondayIdx(c));
+  $('#title').textContent=`${pad(s.getDate())}/${pad(s.getMonth()+1)} – ${pad(new Date(s.getFullYear(),s.getMonth(),s.getDate()+6).getDate())}/${pad(new Date(s.getFullYear(),s.getMonth(),s.getDate()+6).getMonth()+1)}`;
+  view.innerHTML=ttHTML(Array.from({length:7},(_,i)=>new Date(s.getFullYear(),s.getMonth(),s.getDate()+i)));
+}
+function rDay(){
+  const d=state.cur;
+  $('#title').textContent=`${DOWL[d.getDay()]}, ${pad(d.getDate())}/${pad(d.getMonth()+1)}`;
+  view.innerHTML=ttHTML([d]);
+}
+function rWeekStack(){
   const c=state.cur,s=new Date(c.getFullYear(),c.getMonth(),c.getDate()-mondayIdx(c)),e=new Date(s.getFullYear(),s.getMonth(),s.getDate()+6);
   $('#title').textContent=`${pad(s.getDate())}/${pad(s.getMonth()+1)} – ${pad(e.getDate())}/${pad(e.getMonth()+1)}`;
   let h='<div class="week">';
   for(let i=0;i<7;i++){
     const d=new Date(s.getFullYear(),s.getMonth(),s.getDate()+i),k=key(d);
     h+=`<div class="wcol ${k===key(new Date())?'today':''} ${k===tgtKey()?'target':''}"><header data-k="${k}"><span class="label">${DOW[i]}${k===tgtKey()?' · mục tiêu':''}</span><b>${d.getDate()}</b><small>${remLabel(d)}</small></header>`;
-    h+=notesOf(k).map(x=>`<div class="np ${x.done?'done':''}" data-k="${k}" style="--c:${x.c}">${esc(x.t)}</div>`).join('');
+    h+=notesOf(k).map(x=>`<div class="np ${x.done?'done':''}" data-k="${k}" style="--c:${x.c}">${x.s?`<span class="tm">${tl(x)}</span>`:''}${esc(x.t)}</div>`).join('');
     h+=`<button class="wadd" data-k="${k}">+ Thêm</button></div>`;
   }
   view.innerHTML=h+'</div>';
@@ -481,7 +584,7 @@ function rAgenda(){
   const nk=key(new Date());
   const up=keys.filter(k=>k>=nk),past=keys.filter(k=>k<nk).reverse();
   const row=k=>{const d=parseKey(k),n=dayDiff(new Date(),d);
-    return `<div class="arow" data-k="${k}"><div class="d"><b>${d.getDate()}</b><small>Th${d.getMonth()+1} · ${DOW[mondayIdx(d)]}</small></div><div><div class="left">${fmtVN(d)} · ${n===0?'hôm nay':n>0?'còn '+n+' ngày':Math.abs(n)+' ngày trước'}${k===tgtKey()?' · <em>ngày mục tiêu</em>':''}</div><ul>${state.notes[k].map(x=>`<li class="${x.done?'done':''}" style="--c:${x.c}">${esc(x.t)}</li>`).join('')}</ul></div></div>`};
+    return `<div class="arow" data-k="${k}"><div class="d"><b>${d.getDate()}</b><small>Th${d.getMonth()+1} · ${DOW[mondayIdx(d)]}</small></div><div><div class="left">${fmtVN(d)} · ${n===0?'hôm nay':n>0?'còn '+n+' ngày':Math.abs(n)+' ngày trước'}${k===tgtKey()?' · <em>ngày mục tiêu</em>':''}</div><ul>${state.notes[k].map(x=>`<li class="${x.done?'done':''}" style="--c:${x.c}">${x.s?`<span class="tm">${tl(x)}</span>`:''}${esc(x.t)}</li>`).join('')}</ul></div></div>`};
   let h='';
   if(!keys.length)h='<div class="empty"><b>Chưa có ghi chú nào</b>Bấm vào một ngày bất kỳ trên lịch để thêm kế hoạch.</div>';
   else h=(up.length?'<div class="agenda">'+up.map(row).join('')+'</div>':'')+(past.length?`<div class="sect">Đã qua</div><div class="agenda">`+past.map(row).join('')+'</div>':'');
@@ -492,6 +595,7 @@ function shift(dir){
   const c=state.cur;
   if(state.view==='month')state.cur=new Date(c.getFullYear(),c.getMonth()+dir,1);
   else if(state.view==='week')state.cur=new Date(c.getFullYear(),c.getMonth(),c.getDate()+7*dir);
+  else if(state.view==='day')state.cur=new Date(c.getFullYear(),c.getMonth(),c.getDate()+dir);
   else if(state.view==='year')state.cur=new Date(c.getFullYear()+dir,c.getMonth(),1);
   render();
 }
@@ -504,6 +608,13 @@ document.addEventListener('keydown',e=>{
   if(e.key==='ArrowLeft')shift(-1);if(e.key==='ArrowRight')shift(1);
 });
 view.onclick=e=>{
+  const bl=e.target.closest('.blk');if(bl){openNote(bl.dataset.k);return}
+  const col=e.target.closest('.tt-col');
+  if(col){
+    const tt=col.closest('.tt'),y=e.clientY-col.getBoundingClientRect().top;
+    const m=tt.dataset.lo*60+Math.floor(y/tt.dataset.hh*2)*30;
+    openNote(col.dataset.k,pad(Math.floor(m/60))+':'+pad(m%60));return;
+  }
   const m=e.target.closest('[data-m]');
   if(m){state.cur=new Date(state.cur.getFullYear(),+m.dataset.m,1);state.view='month';render();return}
   const k=e.target.closest('[data-k]');if(k)openNote(k.dataset.k);
@@ -513,17 +624,17 @@ let editK=null,editC=COLORS[0];
 function closeAll(){$$('.back').forEach(b=>b.classList.remove('open'))}
 $$('.back').forEach(b=>b.addEventListener('mousedown',e=>{if(e.target===b)closeAll()}));
 $$('[data-close]').forEach(b=>b.addEventListener('click',closeAll));
-function openNote(k){
+function openNote(k,start){
   editK=k;const d=parseKey(k),n=dayDiff(new Date(),d);
   $('#nTitle').textContent=fmtVN(d);
   $('#nSub').textContent=(n===0?'Hôm nay':n>0?`Còn ${n} ngày nữa`:`Đã qua ${Math.abs(n)} ngày`)+(k===tgtKey()?' · ngày mục tiêu':'')+` · cách mục tiêu ${Math.abs(dayDiff(d,targetDT()))} ngày`;
   drawNotes();
   $('#nColors').innerHTML=COLORS.map(c=>`<button data-c="${c}" style="--c:${c}" class="${c===editC?'on':''}" aria-label="Màu ${c}"></button>`).join('');
-  $('#nText').value='';$('#mNote').classList.add('open');setTimeout(()=>$('#nText').focus(),50);
+  $('#nText').value='';$('#nStart').value=start||'';$('#nEnd').value='';$('#mNote').classList.add('open');setTimeout(()=>$('#nText').focus(),50);
 }
 function drawNotes(){
   const ns=notesOf(editK);
-  $('#nList').innerHTML=ns.length?ns.map((x,i)=>`<div class="nitem ${x.done?'done':''}"><input type="checkbox" data-i="${i}" ${x.done?'checked':''}><div class="t" style="--c:${x.c}">${esc(x.t)}</div><button class="x" data-del="${i}" aria-label="Xoá">×</button></div>`).join(''):'<div class="sub" style="margin:10px 0">Chưa có ghi chú cho ngày này.</div>';
+  $('#nList').innerHTML=ns.length?ns.map((x,i)=>`<div class="nitem ${x.done?'done':''}"><input type="checkbox" data-i="${i}" ${x.done?'checked':''}><div class="t" style="--c:${x.c}">${x.s?`<span class="tm">${tl(x)}</span>`:''}${esc(x.t)}</div><button class="x" data-del="${i}" aria-label="Xoá">×</button></div>`).join(''):'<div class="sub" style="margin:10px 0">Chưa có ghi chú cho ngày này.</div>';
 }
 $('#nColors').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;editC=b.dataset.c;$$('#nColors button').forEach(x=>x.classList.toggle('on',x===b))};
 $('#nList').onclick=e=>{
@@ -533,8 +644,11 @@ $('#nList').onclick=e=>{
 $('#nList').onchange=e=>{const c=e.target.closest('[data-i]');if(!c||!state.notes[editK])return;state.notes[editK][+c.dataset.i].done=c.checked;save();drawNotes();render()};
 function addNote(){
   const t=$('#nText').value.trim();if(!t){$('#nText').focus();return}
-  (state.notes[editK]=state.notes[editK]||[]).push({id:nid(),t,c:editC,done:false});
-  save();$('#nText').value='';drawNotes();render();toast('Đã lưu ghi chú');
+  const st=$('#nStart').value,en=$('#nEnd').value;
+  if(en&&!st){toast('Hãy chọn giờ bắt đầu');return}
+  if(st&&en&&toMin(en)<=toMin(st)){toast('Giờ kết thúc phải sau giờ bắt đầu');return}
+  const arr=(state.notes[editK]=state.notes[editK]||[]);arr.push({id:nid(),t,c:editC,done:false,s:st,e:en});arr.sort(byTime);
+  save();$('#nText').value='';$('#nStart').value='';$('#nEnd').value='';drawNotes();render();toast('Đã lưu ghi chú');
 }
 $('#nAdd').onclick=addNote;
 $('#nText').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();addNote()}});
@@ -565,7 +679,10 @@ $('#dFile').onchange=e=>{
 
 const nid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36);
 function hid(s){let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))|0;return 'o'+(h>>>0).toString(36)}
-function ensureIds(n){for(const k in n)n[k].forEach(x=>{if(!x.id)x.id=hid(k+x.t+x.c)})}
+function ensureIds(n){for(const k in n){n[k].forEach(x=>{if(!x.id)x.id=hid(k+x.t+x.c)});n[k].sort(byTime)}}
+$('#nClear').onclick=()=>{$('#nStart').value='';$('#nEnd').value=''};
+matchMedia('(max-width:700px)').addEventListener('change',()=>render());
+setInterval(()=>{if((state.view==='week'||state.view==='day')&&!document.querySelector('.back.open'))render()},60000);
 ensureIds(state.notes);
 window.ccGet=()=>({notes:state.notes,target:state.target,start:state.start});
 window.ccApply=d=>{
