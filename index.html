@@ -261,7 +261,7 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:26px}
 
 <!-- target modal -->
 <div class="back" id="mTarget"><div class="modal" role="dialog" aria-modal="true">
-  <h3>Đổi ngày mục tiêu</h3><div class="sub">Mặc định là 21/07/2027 — bạn có thể đặt bất kỳ ngày nào.</div>
+  <h3>Đổi ngày mục tiêu</h3><div class="sub">Mặc định là 21/07/2030 — bạn có thể đặt bất kỳ ngày nào.</div>
   <div class="field"><label>Tên sự kiện</label><input id="tName" maxlength="60"></div>
   <div class="field"><label>Ngày</label><input id="tDate" type="date"></div>
   <div class="field"><label>Giờ</label><input id="tTime" type="time" value="00:00"></div>
@@ -300,7 +300,7 @@ const esc=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&q
 const mondayIdx=d=>(d.getDay()+6)%7;
 
 let state={
-  target:LS.get('cc_target',{name:'Ngày quan trọng',date:'2027-07-21',time:'00:00'}),
+  target:LS.get('cc_target',{name:'Ngày quan trọng',date:'2030-07-21',time:'00:00'}),
   start:LS.get('cc_start',null)||key(new Date()),
   notes:LS.get('cc_notes',{}),
   view:LS.get('cc_view','month'),
