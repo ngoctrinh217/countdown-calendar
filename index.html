@@ -37,7 +37,13 @@ aside{padding:32px 32px 32px 36px;border-right:1px solid var(--line);position:st
 .brand b::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--accent)}
 .tools{display:flex;gap:4px}
 .ibtn{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;color:var(--ink2)}
+.ibtn{position:relative}
 .ibtn:hover{background:var(--paper2);color:var(--ink)}
+.sdot{position:absolute;right:5px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--mute);border:1.5px solid var(--paper)}
+.sdot.on{background:#4a9b6e}.sdot.err{background:var(--accent)}
+.sync-box{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface);font-size:13.5px;line-height:1.55;margin-bottom:4px}
+.sync-box b{font-weight:600}
+.btn[hidden]{display:none}
 h1{font-family:var(--serif);font-weight:400;font-size:34px;line-height:1.1;letter-spacing:-.02em;margin:10px 0 6px}
 .tdate{font-family:var(--mono);font-size:12.5px;color:var(--ink2)}
 .big{margin:34px 0 6px;display:flex;align-items:baseline;gap:12px}
@@ -205,6 +211,7 @@ textarea:focus,.field input:focus{border-color:var(--ink)}
       <b>Countdown</b>
       <div class="tools">
         <button class="ibtn" id="btnTheme" title="Đổi giao diện sáng/tối" aria-label="Đổi giao diện"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button>
+        <button class="ibtn" id="btnSync" title="Đồng bộ giữa các thiết bị" aria-label="Đồng bộ"><svg viewBox="0 0 24 24"><path d="M7 18a4 4 0 0 1-.6-7.96A6 6 0 0 1 18 9.5a4 4 0 0 1-.5 8.5z"/></svg><span class="sdot" id="syncDot"></span></button>
         <button class="ibtn" id="btnData" title="Sao lưu / khôi phục ghi chú" aria-label="Sao lưu"><svg viewBox="0 0 24 24"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/></svg></button>
       </div>
     </div>
@@ -288,6 +295,12 @@ textarea:focus,.field input:focus{border-color:var(--ink)}
   <div class="row"><button class="btn" data-close>Đóng</button></div>
 </div></div>
 
+<div class="back" id="mSync"><div class="modal" role="dialog" aria-modal="true">
+  <h3>Đồng bộ thiết bị</h3><div class="sub">Đăng nhập Google để ghi chú tự cập nhật trên mọi máy.</div>
+  <div class="sync-box" id="syncStatus">Đang tải…</div>
+  <div class="row"><button class="btn" data-close>Đóng</button><button class="btn pri" id="syncIn" hidden>Đăng nhập Google</button><button class="btn" id="syncOut" hidden>Đăng xuất</button></div>
+</div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -318,7 +331,7 @@ let state={
   theme:LS.get('cc_theme',matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light')
 };
 LS.set('cc_start',state.start);
-const save=()=>{LS.set('cc_notes',state.notes);LS.set('cc_target',state.target);LS.set('cc_view',state.view)};
+const save=()=>{LS.set('cc_notes',state.notes);LS.set('cc_target',state.target);LS.set('cc_start',state.start);LS.set('cc_view',state.view);window.ccPush&&window.ccPush()};
 const targetDT=()=>{const[y,m,d]=state.target.date.split('-').map(Number);const[h,mi]=(state.target.time||'00:00').split(':').map(Number);return new Date(y,m-1,d,h,mi)};
 
 const applyTheme=()=>document.documentElement.dataset.theme=state.theme;
@@ -460,12 +473,12 @@ function drawNotes(){
 $('#nColors').onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;editC=b.dataset.c;$$('#nColors button').forEach(x=>x.classList.toggle('on',x===b))};
 $('#nList').onclick=e=>{
   const del=e.target.closest('[data-del]');
-  if(del){state.notes[editK].splice(+del.dataset.del,1);if(!state.notes[editK].length)delete state.notes[editK];save();drawNotes();render()}
+  if(del&&state.notes[editK]){state.notes[editK].splice(+del.dataset.del,1);if(!state.notes[editK].length)delete state.notes[editK];save();drawNotes();render()}
 };
-$('#nList').onchange=e=>{const c=e.target.closest('[data-i]');if(!c)return;state.notes[editK][+c.dataset.i].done=c.checked;save();drawNotes();render()};
+$('#nList').onchange=e=>{const c=e.target.closest('[data-i]');if(!c||!state.notes[editK])return;state.notes[editK][+c.dataset.i].done=c.checked;save();drawNotes();render()};
 function addNote(){
   const t=$('#nText').value.trim();if(!t){$('#nText').focus();return}
-  (state.notes[editK]=state.notes[editK]||[]).push({t,c:editC,done:false});
+  (state.notes[editK]=state.notes[editK]||[]).push({id:nid(),t,c:editC,done:false});
   save();$('#nText').value='';drawNotes();render();toast('Đã lưu ghi chú');
 }
 $('#nAdd').onclick=addNote;
@@ -495,8 +508,83 @@ $('#dFile').onchange=e=>{
   r.readAsText(f);e.target.value='';
 };
 
+const nid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36);
+function hid(s){let h=0;for(const ch of s)h=(h*31+ch.charCodeAt(0))|0;return 'o'+(h>>>0).toString(36)}
+function ensureIds(n){for(const k in n)n[k].forEach(x=>{if(!x.id)x.id=hid(k+x.t+x.c)})}
+ensureIds(state.notes);
+window.ccGet=()=>({notes:state.notes,target:state.target,start:state.start});
+window.ccApply=d=>{
+  if(d.notes){ensureIds(d.notes);state.notes=d.notes}
+  if(d.target)state.target=d.target;if(d.start)state.start=d.start;
+  LS.set('cc_notes',state.notes);LS.set('cc_target',state.target);LS.set('cc_start',state.start);
+  render();if($('#mNote').classList.contains('open'))drawNotes();
+};
 render();
 })();
+</script>
+
+<script type="module">
+/* ====== Cấu hình Firebase: dán firebaseConfig của bạn vào đây ====== */
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+/* ================================================================== */
+const $=s=>document.querySelector(s);
+const box=$('#syncStatus'),bIn=$('#syncIn'),bOut=$('#syncOut'),dot=$('#syncDot');
+$('#btnSync').onclick=()=>$('#mSync').classList.add('open');
+const show=(html,cls='')=>{box.innerHTML=html;dot.className='sdot '+cls};
+if(!firebaseConfig.apiKey){
+  show('Chưa cấu hình Firebase nên ghi chú chỉ lưu trên thiết bị này.');
+}else{
+  try{
+    const B='https://www.gstatic.com/firebasejs/10.12.2/';
+    const [{initializeApp},A,F]=await Promise.all([import(B+'firebase-app.js'),import(B+'firebase-auth.js'),import(B+'firebase-firestore.js')]);
+    const app=initializeApp(firebaseConfig),auth=A.getAuth(app),db=F.getFirestore(app);
+    let ref=null,unsub=null,timer=null,busy=false;
+    const merge=(a,b)=>{const o={};for(const m of [a||{},b||{}])for(const k in m){const arr=o[k]=o[k]||[];for(const x of m[k])if(!arr.some(y=>y.id===x.id))arr.push(x)}return o};
+    const same=d=>JSON.stringify(d)===JSON.stringify(window.ccGet());
+    const write=()=>F.setDoc(ref,{data:JSON.stringify(window.ccGet()),updatedAt:Date.now()});
+    window.ccPush=()=>{
+      if(!ref||busy)return;clearTimeout(timer);
+      timer=setTimeout(()=>write().then(()=>show('<b>Đã đồng bộ.</b> '+auth.currentUser.email,'on')).catch(e=>show('Lỗi đồng bộ: '+e.code,'err')),500);
+    };
+    bIn.onclick=async()=>{
+      const p=new A.GoogleAuthProvider();
+      try{await A.signInWithPopup(auth,p)}catch(e){
+        if(e.code==='auth/popup-blocked')A.signInWithRedirect(auth,p);
+        else if(e.code!=='auth/popup-closed-by-user')show('Đăng nhập lỗi: '+e.code,'err');
+      }
+    };
+    bOut.onclick=()=>A.signOut(auth);
+    A.onAuthStateChanged(auth,async u=>{
+      if(unsub){unsub();unsub=null}
+      if(!u){ref=null;bIn.hidden=false;bOut.hidden=true;show('Chưa đăng nhập. Ghi chú đang chỉ lưu trên thiết bị này.');return}
+      bIn.hidden=true;bOut.hidden=false;show('Đang đồng bộ…');
+      ref=F.doc(db,'users',u.uid);
+      try{
+        busy=true;
+        const snap=await F.getDoc(ref),local=window.ccGet();
+        if(snap.exists()){
+          const c=JSON.parse(snap.data().data);
+          window.ccApply({notes:merge(c.notes,local.notes),target:c.target||local.target,start:c.start||local.start});
+        }
+        await write();busy=false;
+        unsub=F.onSnapshot(ref,s=>{
+          if(!s.exists()||s.metadata.hasPendingWrites)return;
+          const d=JSON.parse(s.data().data);if(same(d))return;
+          busy=true;window.ccApply(d);busy=false;
+          show('<b>Đã đồng bộ.</b> '+u.email,'on');
+        });
+        show('<b>Đã đồng bộ.</b> '+u.email+'<br>Mọi thay đổi sẽ tự cập nhật trên các máy đã đăng nhập.','on');
+      }catch(e){busy=false;show('Lỗi đồng bộ: '+(e.code||e.message)+'. Kiểm tra Firestore Rules.','err')}
+    });
+  }catch(e){show('Không tải được Firebase: '+e.message,'err')}
+}
 </script>
 </body>
 </html>
