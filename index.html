@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#faf9f5">
 <title>Countdown Calendar</title>
 <meta name="description" content="Đếm ngược tới ngày quan trọng, xem lịch nhiều dạng và ghi chú kế hoạch cho từng ngày.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%23c96442'/><circle cx='16' cy='16' r='7' fill='none' stroke='white' stroke-width='2.5'/><path d='M16 11v5l3 2' stroke='white' stroke-width='2.5' fill='none' stroke-linecap='round'/></svg>">
@@ -201,6 +202,52 @@ textarea:focus,.field input:focus{border-color:var(--ink)}
   .arow{grid-template-columns:64px 1fr;gap:12px}.arow .d b{font-size:38px}
   .acts{flex-direction:column}
 }
+
+/* ---------- mobile app feel ---------- */
+.dock{display:none}
+button{-webkit-tap-highlight-color:transparent}
+@media(max-width:700px){
+  body{padding-bottom:calc(68px + env(safe-area-inset-bottom))}
+  aside{padding:14px 16px 16px}
+  .brand{margin-bottom:14px}
+  h1{font-size:24px;margin:6px 0 2px}
+  .tdate{font-size:11.5px}
+  .big{margin:10px 0 0}.big #uD{font-size:68px}
+  .hms{margin-top:10px}.hms div{padding:9px 0 8px 12px}.hms div:first-child{padding-left:0}.hms b{font-size:21px}
+  .prog{margin-top:12px}
+  dl{display:grid;grid-template-columns:repeat(4,1fr);margin-top:12px;border-top:1px solid var(--line)}
+  dl div{flex-direction:column;align-items:flex-start;gap:2px;padding:10px 6px 4px 0;border-bottom:0}
+  dt{font-size:10.5px;line-height:1.25;color:var(--mute);order:2}
+  dd{font-size:17px;order:1}
+  .acts{flex-direction:row;gap:8px;padding-top:12px;margin-top:0}
+  .acts .btn{flex:1;padding:10px 6px;font-size:12.5px;gap:6px;white-space:nowrap}
+  main{padding:18px 12px 24px}
+  .bar{margin-bottom:12px;align-items:center}
+  .nav{width:100%}
+  .nav h2{flex:1;font-size:27px;margin:0}
+  .nbtn{width:40px;height:40px;border-radius:10px}
+  .tbtn{height:40px;margin:0 4px 0 0;order:3}
+  .tabs{display:none}
+  .grid,.week{border-radius:12px}
+  .cell{min-height:58px}
+  .cell.today .n span:first-child{min-width:26px;height:26px;margin:-2px 0 0 0}
+  .foot{display:none}
+  .wcol header{display:flex;align-items:baseline;gap:10px}
+  .wcol header b{font-size:26px}
+  .wadd{padding:10px}
+  .dock{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--paper);border-top:1px solid var(--line);padding:6px 10px calc(6px + env(safe-area-inset-bottom))}
+  .dock button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 4px;font-size:11px;font-weight:500;color:var(--mute);border-radius:10px}
+  .dock button svg{width:21px;height:21px}
+  .dock button.on{color:var(--accent)}
+  .back{align-items:flex-end;padding:0}
+  .modal{width:100%;max-width:none;max-height:88vh;border-radius:18px 18px 0 0;padding:22px 18px calc(20px + env(safe-area-inset-bottom));animation:sheet .22s ease}
+  .modal::before{content:"";display:block;width:38px;height:4px;border-radius:3px;background:var(--line);margin:-10px auto 16px}
+  .row .btn{flex:1;padding:12px}
+  textarea,.field input{font-size:16px}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom))}
+  .colors button{width:26px;height:26px}
+}
+@keyframes sheet{from{transform:translateY(60px);opacity:.4}to{transform:none;opacity:1}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -265,6 +312,14 @@ textarea:focus,.field input:focus{border-color:var(--ink)}
     <div class="foot">Ghi chú được lưu trên trình duyệt này. Dùng nút sao lưu để chuyển sang thiết bị khác.</div>
   </main>
 </div>
+
+
+<nav class="dock" id="dock" aria-label="Chế độ xem">
+  <button data-v="month" class="on"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Tháng</button>
+  <button data-v="week"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M9.2 5v15M14.8 5v15"/></svg>Tuần</button>
+  <button data-v="year"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1"/></svg>Năm</button>
+  <button data-v="agenda"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg>Kế hoạch</button>
+</nav>
 
 <!-- note modal -->
 <div class="back" id="mNote"><div class="modal" role="dialog" aria-modal="true">
@@ -372,7 +427,7 @@ const tgtKey=()=>state.target.date;
 
 const view=$('#view');
 function render(){
-  $$('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
+  $$('#seg button,#dock button').forEach(b=>b.classList.toggle('on',b.dataset.v===state.view));
   LS.set('cc_view',state.view);
   ({month:rMonth,week:rWeek,year:rYear,agenda:rAgenda})[state.view]();
   tick();
@@ -442,7 +497,7 @@ function shift(dir){
 }
 $('#prev').onclick=()=>shift(-1);$('#next').onclick=()=>shift(1);
 $('#today').onclick=()=>{state.cur=sod(new Date());render()};
-$('#seg').onclick=e=>{const b=e.target.closest('button');if(!b)return;state.view=b.dataset.v;render()};
+[$('#seg'),$('#dock')].forEach(el=>el.onclick=e=>{const b=e.target.closest('button');if(!b)return;state.view=b.dataset.v;render();if(el.id==='dock')window.scrollTo({top:document.querySelector('main').offsetTop-8})});
 document.addEventListener('keydown',e=>{
   if(document.querySelector('.back.open')){if(e.key==='Escape')closeAll();return}
   if(e.target.matches('input,textarea'))return;
